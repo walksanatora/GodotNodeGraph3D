@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="Graph3DVariable" load_steps=2 format=3 uid="uid://sl6poi5upve5"]
+
+[ext_resource type="Script" path="res://VariableType.gd" id="1_jf73l"]
+
+[resource]
+resource_name = "Any"
+script = ExtResource("1_jf73l")
+display_color = Color(1, 1, 1, 1)

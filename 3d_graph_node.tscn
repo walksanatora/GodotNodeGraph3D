@@ -1,0 +1,51 @@
+[gd_scene load_steps=9 format=3 uid="uid://wr8f5vb2q0fs"]
+
+[ext_resource type="Script" path="res://3d_graph_node.gd" id="1_8sevp"]
+[ext_resource type="Script" path="res://addons/freecam_3D/freecam.gd" id="2_ro6u6"]
+[ext_resource type="Script" path="res://VariableType.gd" id="2_t2t1s"]
+[ext_resource type="Resource" uid="uid://sl6poi5upve5" path="res://defaults/Any.tres" id="3_mhcme"]
+[ext_resource type="Script" path="res://addons/curvemesh3d/curvemesh3d.gd" id="5_cyw83"]
+
+[sub_resource type="Curve3D" id="Curve3D_7gohe"]
+bake_interval = 0.1
+_data = {
+"points": PackedVector3Array(-0.738703, 0.0523964, -0.00619906, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0.81787, -0.0279978, -0.00220585, -1, 0.5, 0.5),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve" id="Curve_2pn5m"]
+_data = [Vector2(0, 0.2), 0.0, 0.0, 0, 0, Vector2(1e-05, 0.2), 0.0, 0.0, 0, 0]
+point_count = 2
+metadata/_snap_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5jc11"]
+albedo_color = Color(0, 0.615686, 0.882353, 1)
+roughness = 0.5
+
+[node name="World" type="Node3D"]
+
+[node name="Freecam3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.985023)
+script = ExtResource("2_ro6u6")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Freecam3D"]
+transform = Transform3D(1, 0, 0, 0, 0.74781, 0.663913, 0, -0.663913, 0.74781, 0, 1.3915, 0)
+
+[node name="3DGraphNode" type="Node3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.205734, 0)
+script = ExtResource("1_8sevp")
+inputs = Array[ExtResource("2_t2t1s")]([ExtResource("3_mhcme")])
+outputs = Array[ExtResource("2_t2t1s")]([ExtResource("3_mhcme"), ExtResource("3_mhcme")])
+node_name = "I can type here"
+category_color = Color(0.41135, 0.492677, 2.88785e-07, 1)
+hpadding = 1.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+
+[node name="CurveMesh3D" type="Path3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.418734, 0, 0)
+curve = SubResource("Curve3D_7gohe")
+script = ExtResource("5_cyw83")
+radius_profile = SubResource("Curve_2pn5m")
+material = SubResource("StandardMaterial3D_5jc11")
