@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://b4gl2vfk5jck7"]
+
+[ext_resource type="Script" path="res://addons/node_graph_3D/scripts/3d_graph_node.gd" id="1_qqqab"]
+[ext_resource type="Script" path="res://addons/node_graph_3D/scripts/VariableType.gd" id="2_glbpr"]
+[ext_resource type="Resource" uid="uid://sl6poi5upve5" path="res://addons/node_graph_3D/defaults/Any.tres" id="4_au2o8"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Graph3DNode" type="Node3D" parent="."]
+script = ExtResource("1_qqqab")
+inputs = Array[ExtResource("2_glbpr")]([ExtResource("4_au2o8")])
+outputs = Array[ExtResource("2_glbpr")]([ExtResource("4_au2o8"), ExtResource("4_au2o8")])
+node_name = "Test Node"
+hpadding = 0.5

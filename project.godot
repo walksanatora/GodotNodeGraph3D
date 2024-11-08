@@ -14,9 +14,14 @@ config/name="3dNodeGraphLib"
 config/features=PackedStringArray("4.3", "Mobile")
 config/icon="res://icon.svg"
 
+[editor]
+
+version_control/plugin_name="GitPlugin"
+version_control/autoload_on_startup=true
+
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/curvemesh3d/plugin.cfg", "res://addons/freecam_3D/plugin.cfg")
+enabled=PackedStringArray("res://addons/curvemesh3d/plugin.cfg", "res://addons/freecam_3D/plugin.cfg", "res://addons/node_graph_3D/plugin.cfg")
 
 [rendering]
 
