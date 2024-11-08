@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="Graph3DVariable" load_steps=2 format=3 uid="uid://b6jg453jsnnpg"]
+
+[ext_resource type="Script" path="res://addons/node_graph_3D/scripts/VariableType.gd" id="1_wmfe6"]
+
+[resource]
+resource_name = "Black Any"
+script = ExtResource("1_wmfe6")
+display_color = Color(0, 0, 0, 1)

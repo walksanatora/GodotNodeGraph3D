@@ -59,6 +59,8 @@ class_name Graph3DNode
 
 ##fired at the end of [method _recalc_appearance]
 signal appearance_recalculated(this: Graph3DNode)
+##fired on the creation of a port (which are destroyed and remade in [method _recalc_appearance])
+signal port_created(port: Graph3DPort)
 
 var _text: MeshInstance3D
 var _type: MeshInstance3D
@@ -154,6 +156,7 @@ func _recalc_appearance():
 	var pos_offset = Vector3(0,-_text.mesh.get_aabb().size.y,0)
 	
 	for i in range(max(inputs.size(), outputs.size())):
+		#region value setup
 		var line = Node3D.new()
 		line.position = pos_offset
 		line.name = "%s" % i
@@ -165,6 +168,7 @@ func _recalc_appearance():
 		if outputs.size() > i:
 			out = outputs[i]
 		var v_offset = 0
+		#endregion
 		if inp:
 			var text := MeshInstance3D.new()
 			var mesh := TextMesh.new()
@@ -172,7 +176,7 @@ func _recalc_appearance():
 			text.name = "Input"
 			mesh.text = inp.resource_name
 			text.mesh = mesh
-			text.position.x -= (mesh.get_aabb().size.x/2) + (hpadding/2)
+			text.position.x = -((mesh.get_aabb().size.x/2) + (hpadding/2))
 			line.add_child(text)
 			v_offset = mesh.get_aabb().size.y
 		if out:
@@ -182,7 +186,7 @@ func _recalc_appearance():
 			text.name = "Output"
 			mesh.text = out.resource_name
 			text.mesh = mesh
-			text.position.x += (mesh.get_aabb().size.x/2) + (hpadding/2)
+			text.position.x = (mesh.get_aabb().size.x/2) + (hpadding/2)
 			line.add_child(text)
 			v_offset = max(mesh.get_aabb().size.y,v_offset)
 		line.position.y -= v_offset/2
@@ -198,26 +202,30 @@ func _recalc_appearance():
 	for line in _ports.get_children():
 		var input: MeshInstance3D = line.get_node_or_null("Input") as MeshInstance3D
 		if input:
-			var x = (size.x/2) - (input.mesh.get_aabb().size.x/2) - 0.1
+			var x = (size.x/2) - (input.mesh.get_aabb().size.x/2) - min((hpadding/2),0.1)
 			input.position.x = -x
 			var port = Graph3DPort.new()
 			port.position.x = -max(
-				calc_aabb(input).size.x,
+				input.mesh.get_aabb().size.x,
 				size.x/2
 			)
 			port.name = "Input_port"
+			port.side = Graph3DPort.Side.Input
+			port.type = inputs[line.name.to_int()]
 			line.add_child(port)
 			port.collision_layer = port_phys_mask
 		var output: MeshInstance3D = line.get_node_or_null("Output") as MeshInstance3D
 		if output:
-			var x = (size.x/2) - (output.mesh.get_aabb().size.x/2) - 0.1
+			var x = (size.x/2) - (output.mesh.get_aabb().size.x/2) - min((hpadding/2),0.1)
 			output.position.x = x
 			var port = Graph3DPort.new()
 			port.name = "Output_port"
 			port.position.x = max(
-				calc_aabb(output).size.x,
+				output.mesh.get_aabb().size.x,
 				size.x/2
 			)
+			port.side = Graph3DPort.Side.Output
+			port.type = outputs[line.name.to_int()]
 			line.add_child(port)
 			port.collision_layer = port_phys_mask
 
