@@ -1,18 +1,22 @@
 ## What happens to text here
-
 @tool
+@icon("res://addons/node_graph_3d/icons/Graph3D.svg")
 extends Node3D
 class_name Graph3DNode
 
 ## A node that is a fully functional node in a 3d graph
 @export_group("Configuration")
 ## A list of input variable types for this node
-@export var inputs: Array[Graph3DVariable] = []:
+@export var inputs: Array[Graph3DVariable] = [
+	preload("res://addons/node_graph_3D/defaults/Any.tres")
+]:
 	set(to):
 		inputs = to
 		_recalc_appearance()
 ## A list of output variable types for this node
-@export var outputs: Array[Graph3DVariable] = []:
+@export var outputs: Array[Graph3DVariable] = [
+	preload("res://addons/node_graph_3D/defaults/Any.tres")
+]:
 	set(to):
 		outputs = to
 		_recalc_appearance()
@@ -28,17 +32,21 @@ class_name Graph3DNode
 ## the color of the category bar behind the node name
 @export var category_color: Color = Color(0.34,0.34,0.34):
 	set(to):
-		_type.mesh.material.albedo_color = to
 		category_color = to
+		if !_type: return
+		_type.mesh.material.albedo_color = to
 ## the color of the background of the node
 @export var background_color: Color = Color(0.17,0.17,0.17):
 	set(to):
-		_board.mesh.material.albedo_color = to
 		background_color = to
+		if !_board: return
+		_board.mesh.material.albedo_color = to
+		
 @export var text_material: StandardMaterial3D = preload("res://addons/node_graph_3D/defaults/text_material.tres"):
 	set(to):
-		_text.mesh.material = to
 		text_material = to
+		if !_text: return
+		_text.mesh.material = to
 		_recalc_appearance()
 ## how many units of padding are applied vertically
 @export var vpadding: float = 0.1:
@@ -66,6 +74,8 @@ var _text: MeshInstance3D
 var _type: MeshInstance3D
 var _board: MeshInstance3D
 var _ports: Node
+
+var _init = false
 
 func _ready() -> void:
 	#region text setup/validation
@@ -141,57 +151,26 @@ func _ready() -> void:
 		ports_i = child
 	_ports = ports_i
 	#endregion
+	_init = true
 	_recalc_appearance()
+	_recalc_appearance() # this is needed because for SOME REASON long variable names clip when calced only once
 
 ## Re calculates and re-ports the node based on defined variables. [br]
 ## All validation should have been done during setters and _ready
 func _recalc_appearance():
-	if !_board: return
-	elif !_type: return
-	elif !_ports: return
-	elif !_board: return
+	if !_init: return
 	_board.mesh.size = Vector3.ZERO
 	_type.mesh.size = Vector3.ZERO
-	for child in _ports.get_children(): child.free()
-	var pos_offset = Vector3(0,-_text.mesh.get_aabb().size.y,0)
-	
-	for i in range(max(inputs.size(), outputs.size())):
-		#region value setup
-		var line = Node3D.new()
-		line.position = pos_offset
-		line.name = "%s" % i
-		_ports.add_child(line)
-		var inp: Graph3DVariable
-		if inputs.size() > i:
-			inp = inputs[i]
-		var out: Graph3DVariable
-		if outputs.size() > i:
-			out = outputs[i]
-		var v_offset = 0
-		#endregion
-		if inp:
-			var text := MeshInstance3D.new()
-			var mesh := TextMesh.new()
-			mesh.material = text_material
-			text.name = "Input"
-			mesh.text = inp.resource_name
-			text.mesh = mesh
-			text.position.x = -((mesh.get_aabb().size.x/2) + (hpadding/2))
-			line.add_child(text)
-			v_offset = mesh.get_aabb().size.y
-		if out:
-			var text := MeshInstance3D.new()
-			var mesh := TextMesh.new()
-			mesh.material = text_material
-			text.name = "Output"
-			mesh.text = out.resource_name
-			text.mesh = mesh
-			text.position.x = (mesh.get_aabb().size.x/2) + (hpadding/2)
-			line.add_child(text)
-			v_offset = max(mesh.get_aabb().size.y,v_offset)
-		line.position.y -= v_offset/2
-		pos_offset.y -= v_offset + vpadding
-		pass
+	var count = max(inputs.size(), outputs.size())
+	var child_count = _ports.get_child_count()
+	var v_offset = -_text.mesh.get_aabb().size.y
+	for i in max(child_count, count):
+		if i >= count:
+			var line = _ports.get_node("%s" % i)
+			line.queue_free()
+		else:
+			var ret = update_or_create_line(i, v_offset)
+			v_offset -= ret[1]
 	
 	var size = calc_aabb(self).size * Vector3(1.05,1.05,1)
 	var type_size = _text.mesh.get_aabb().size.y + 0.05
@@ -204,32 +183,87 @@ func _recalc_appearance():
 		if input:
 			var x = (size.x/2) - (input.mesh.get_aabb().size.x/2) - min((hpadding/2),0.1)
 			input.position.x = -x
-			var port = Graph3DPort.new()
+			var port = line.get_node_or_null("Input_port")
+			if !port:
+				port = Graph3DPort.new()
+				port.name = "Input_port"
+				port.side = Graph3DPort.Side.Input
+				port.collision_layer = port_phys_mask
+				line.add_child(port)
+				port.owner = owner
+				port_created.emit(port)
+			port.type = inputs[line.name.to_int()]
 			port.position.x = -max(
 				input.mesh.get_aabb().size.x,
 				size.x/2
 			)
-			port.name = "Input_port"
-			port.side = Graph3DPort.Side.Input
-			port.type = inputs[line.name.to_int()]
-			line.add_child(port)
-			port.collision_layer = port_phys_mask
+			
 		var output: MeshInstance3D = line.get_node_or_null("Output") as MeshInstance3D
 		if output:
 			var x = (size.x/2) - (output.mesh.get_aabb().size.x/2) - min((hpadding/2),0.1)
 			output.position.x = x
-			var port = Graph3DPort.new()
-			port.name = "Output_port"
+			var port = line.get_node_or_null("Output_port")
+			if !port:
+				port = Graph3DPort.new()
+				port.name = "Output_port"
+				port.side = Graph3DPort.Side.Output
+				port.collision_layer = port_phys_mask
+				line.add_child(port)
+				port.owner = owner
+				port_created.emit(port)
+			
+			port.type = outputs[line.name.to_int()]
 			port.position.x = max(
 				output.mesh.get_aabb().size.x,
 				size.x/2
 			)
-			port.side = Graph3DPort.Side.Output
-			port.type = outputs[line.name.to_int()]
-			line.add_child(port)
-			port.collision_layer = port_phys_mask
-
 	appearance_recalculated.emit(self)
+
+func update_or_create_line(i: int, y_off: float) -> Array:
+	var line = _ports.get_node_or_null("%s" % i)
+	var fresh = false
+	if !line:
+		fresh = true
+		line = Node3D.new()
+		line.position.y = y_off
+		line.name = "%s" % i
+		_ports.add_child(line)
+		line.owner = owner
+	#region inp/out setting
+	var inp: Graph3DVariable
+	if inputs.size() > i:
+		inp = inputs[i]
+	var out: Graph3DVariable
+	if outputs.size() > i:
+		out = outputs[i]
+	var v_offset = 0
+	#endregion
+	if inp:
+		var text: MeshInstance3D = line.get_node_or_null("Input")
+		if !text:
+			text = MeshInstance3D.new()
+			var mesh := TextMesh.new()
+			mesh.material = text_material
+			text.name = "Input"
+			text.mesh = mesh
+			line.add_child(text)
+		text.position.x = -((text.mesh.get_aabb().size.x/2) + (hpadding/2))
+		text.mesh.text = inp.resource_name
+		v_offset = text.mesh.get_aabb().size.y
+	if out:
+		var text: MeshInstance3D = line.get_node_or_null("Output")
+		if !text:
+			text = MeshInstance3D.new()
+			var mesh := TextMesh.new()
+			mesh.material = text_material
+			text.name = "Output"
+			text.mesh = mesh
+			line.add_child(text)
+		text.position.x = (text.mesh.get_aabb().size.x/2) + (hpadding/2)
+		text.mesh.text = out.resource_name
+		v_offset = max(text.mesh.get_aabb().size.y,v_offset)
+	if fresh: line.position.y -= v_offset/2
+	return [line, v_offset + vpadding]
 
 ## utility method to calculate a AABB for a node and all its children (should be same size and shape as the yellow box in editor)
 static func calc_aabb(node: Node3D, skip_transformation: bool = true, use_global_transform: bool = false) -> AABB:

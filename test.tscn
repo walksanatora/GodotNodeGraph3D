@@ -1,8 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://b4gl2vfk5jck7"]
+[gd_scene load_steps=6 format=3 uid="uid://b4gl2vfk5jck7"]
 
 [ext_resource type="Script" path="res://addons/node_graph_3D/scripts/3d_graph_node.gd" id="1_qqqab"]
 [ext_resource type="Script" path="res://addons/node_graph_3D/scripts/VariableType.gd" id="2_glbpr"]
-[ext_resource type="Resource" uid="uid://sl6poi5upve5" path="res://addons/node_graph_3D/defaults/Any.tres" id="4_au2o8"]
 [ext_resource type="Resource" uid="uid://b6jg453jsnnpg" path="res://addons/node_graph_3D/defaults/Any_but_Black.tres" id="4_lqk8o"]
 [ext_resource type="Script" path="res://addons/freecam_3D/freecam.gd" id="5_a7c58"]
 
@@ -14,9 +13,19 @@ script/source = "extends Node3D
 @export var node2: Graph3DNode
 
 func _ready():
+	print(\"Starting\")
+	node1._recalc_appearance()
 	var n1p0o: Graph3DPort = node1._ports.get_node(\"0/Output_port\")
 	var n2p0i: Graph3DPort = node2._ports.get_node(\"0/Input_port\")
 	n1p0o.connect_to(n2p0i)
+	print(\"connecting\")
+	
+	var scene = PackedScene.new()
+	for repack in find_children(\"*\",\"\",true,false):
+		repack.owner = self
+	scene.pack(self)
+	ResourceSaver.save(scene, \"res://everything.tscn\")
+	print(\"packed everything\")
 "
 
 [node name="Node3D" type="Node3D" node_paths=PackedStringArray("node1", "node2")]
@@ -24,23 +33,18 @@ script = SubResource("GDScript_87jwf")
 node1 = NodePath("Graph3DNode")
 node2 = NodePath("Graph3DNode2")
 
-[node name="Graph3DNode" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.98295e-05, 0.00498915, -0.00173151)
-script = ExtResource("1_qqqab")
-inputs = Array[ExtResource("2_glbpr")]([ExtResource("4_au2o8"), null, ExtResource("4_au2o8")])
-outputs = Array[ExtResource("2_glbpr")]([ExtResource("4_au2o8"), ExtResource("4_au2o8"), ExtResource("4_au2o8")])
-node_name = "Test Node"
-hpadding = 0.5
-
-[node name="Graph3DNode2" type="Node3D" parent="."]
-transform = Transform3D(0.829603, -0.558353, 0, 0.558353, 0.829603, 0, 0, 0, 1, 2.92791, 0.459428, -0.288311)
-script = ExtResource("1_qqqab")
-inputs = Array[ExtResource("2_glbpr")]([ExtResource("4_lqk8o")])
-outputs = Array[ExtResource("2_glbpr")]([ExtResource("4_lqk8o")])
-node_name = "Test Node 2"
-hpadding = 0.1
-any_type = ExtResource("4_lqk8o")
-
 [node name="Freecam3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.06172, 0, 2.0472)
 script = ExtResource("5_a7c58")
+
+[node name="Graph3DNode" type="Node3D" parent="."]
+script = ExtResource("1_qqqab")
+node_name = "Test BODE"
+
+[node name="Graph3DNode2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.04635, 0, 0)
+script = ExtResource("1_qqqab")
+inputs = Array[ExtResource("2_glbpr")]([ExtResource("4_lqk8o")])
+outputs = Array[ExtResource("2_glbpr")]([ExtResource("4_lqk8o")])
+node_name = "Test Node pt. 2"
+any_type = ExtResource("4_lqk8o")

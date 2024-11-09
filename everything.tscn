@@ -1,0 +1,266 @@
+[gd_scene load_steps=35 format=3]
+
+[ext_resource type="Script" path="res://addons/freecam_3D/freecam.gd" id="1_etrab"]
+[ext_resource type="Script" path="res://addons/node_graph_3D/scripts/3d_graph_node.gd" id="2_p2oov"]
+[ext_resource type="Script" path="res://addons/node_graph_3D/scripts/VariableType.gd" id="3_oi7x3"]
+[ext_resource type="Resource" path="res://addons/node_graph_3D/defaults/Any.tres" id="4_fsmgv"]
+[ext_resource type="Material" path="res://addons/node_graph_3D/defaults/text_material.tres" id="5_kat0v"]
+[ext_resource type="Script" path="res://addons/node_graph_3D/scripts/3d_graph_port.gd" id="6_o0jww"]
+[ext_resource type="Resource" path="res://addons/node_graph_3D/defaults/Any_but_Black.tres" id="7_56avl"]
+
+[sub_resource type="GDScript" id="GDScript_87jwf"]
+resource_name = "Test"
+script/source = "extends Node3D
+
+@export var node1: Graph3DNode
+@export var node2: Graph3DNode
+
+func _ready():
+	print(\"Starting\")
+	node1._recalc_appearance()
+	var n1p0o: Graph3DPort = node1._ports.get_node(\"0/Output_port\")
+	var n2p0i: Graph3DPort = node2._ports.get_node(\"0/Input_port\")
+	n1p0o.connect_to(n2p0i)
+	print(\"connecting\")
+	
+	var scene = PackedScene.new()
+	for repack in find_children(\"*\",\"\",true,false):
+		repack.owner = self
+	scene.pack(self)
+	ResourceSaver.save(scene, \"res://everything.tscn\")
+	print(\"packed everything\")
+"
+
+[sub_resource type="TextMesh" id="TextMesh_v5i7c"]
+material = ExtResource("5_kat0v")
+text = "Test BODE"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yt8rm"]
+shading_mode = 0
+albedo_color = Color(0.34, 0.34, 0.34, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ixmvh"]
+material = SubResource("StandardMaterial3D_yt8rm")
+size = Vector3(0.831305, 0.17, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_px6fv"]
+shading_mode = 0
+albedo_color = Color(0.17, 0.17, 0.17, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_78s2o"]
+material = SubResource("StandardMaterial3D_px6fv")
+size = Vector3(0.831305, 0.208, 0.05)
+
+[sub_resource type="TextMesh" id="TextMesh_uikli"]
+material = ExtResource("5_kat0v")
+text = "Any"
+
+[sub_resource type="TextMesh" id="TextMesh_i45a7"]
+material = ExtResource("5_kat0v")
+text = "Any"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_er2f0"]
+shading_mode = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_cplt0"]
+material = SubResource("StandardMaterial3D_er2f0")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6f6gl"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uiiln"]
+shading_mode = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_afx1i"]
+material = SubResource("StandardMaterial3D_uiiln")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3oubr"]
+
+[sub_resource type="TextMesh" id="TextMesh_rywal"]
+material = ExtResource("5_kat0v")
+text = "Test Node pt. 2"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j2uq8"]
+shading_mode = 0
+albedo_color = Color(0.34, 0.34, 0.34, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o64y6"]
+material = SubResource("StandardMaterial3D_j2uq8")
+size = Vector3(1.59272, 0.22, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0vjel"]
+shading_mode = 0
+albedo_color = Color(0.17, 0.17, 0.17, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_35q56"]
+material = SubResource("StandardMaterial3D_0vjel")
+size = Vector3(1.59272, 0.22625, 0.05)
+
+[sub_resource type="TextMesh" id="TextMesh_vqhu3"]
+material = ExtResource("5_kat0v")
+text = "Black Any"
+
+[sub_resource type="TextMesh" id="TextMesh_wmtst"]
+material = ExtResource("5_kat0v")
+text = "Black Any"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p6k5d"]
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qq1g6"]
+material = SubResource("StandardMaterial3D_p6k5d")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ony73"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0bfcg"]
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6kv3s"]
+material = SubResource("StandardMaterial3D_0bfcg")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xt8s4"]
+
+[node name="Node3D" type="Node3D" node_paths=PackedStringArray("node1", "node2")]
+script = SubResource("GDScript_87jwf")
+node1 = NodePath("Graph3DNode")
+node2 = NodePath("Graph3DNode2")
+
+[node name="Freecam3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.06172, 0, 2.0472)
+current = true
+script = ExtResource("1_etrab")
+toggle_key = 4194306
+invert_speed_controls = false
+overlay_text = true
+
+[node name="Graph3DNode" type="Node3D" parent="."]
+script = ExtResource("2_p2oov")
+inputs = Array[ExtResource("3_oi7x3")]([ExtResource("4_fsmgv")])
+outputs = Array[ExtResource("3_oi7x3")]([ExtResource("4_fsmgv")])
+node_name = "Test BODE"
+category_color = Color(0.34, 0.34, 0.34, 1)
+background_color = Color(0.17, 0.17, 0.17, 1)
+text_material = ExtResource("5_kat0v")
+vpadding = 0.1
+hpadding = 0.05
+any_type = ExtResource("4_fsmgv")
+port_phys_mask = 0
+
+[node name="Text" type="MeshInstance3D" parent="Graph3DNode"]
+mesh = SubResource("TextMesh_v5i7c")
+
+[node name="Type" type="MeshInstance3D" parent="Graph3DNode"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0055)
+mesh = SubResource("BoxMesh_ixmvh")
+
+[node name="Board" type="MeshInstance3D" parent="Graph3DNode"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.189, -0.0055)
+mesh = SubResource("BoxMesh_78s2o")
+
+[node name="Ports" type="Node3D" parent="Graph3DNode"]
+
+[node name="0" type="Node3D" parent="Graph3DNode/Ports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+
+[node name="Input" type="MeshInstance3D" parent="Graph3DNode/Ports/0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24409, 0, 0)
+mesh = SubResource("TextMesh_uikli")
+
+[node name="Output" type="MeshInstance3D" parent="Graph3DNode/Ports/0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24409, 0, 0)
+mesh = SubResource("TextMesh_i45a7")
+
+[node name="Input_port" type="StaticBody3D" parent="Graph3DNode/Ports/0" node_paths=PackedStringArray("connections")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -0.415652, 0, 0)
+collision_layer = 0
+script = ExtResource("6_o0jww")
+side = 0
+type = ExtResource("4_fsmgv")
+connections = []
+
+[node name="Mesh" type="MeshInstance3D" parent="Graph3DNode/Ports/0/Input_port"]
+mesh = SubResource("BoxMesh_cplt0")
+
+[node name="Collider" type="CollisionShape3D" parent="Graph3DNode/Ports/0/Input_port"]
+shape = SubResource("BoxShape3D_6f6gl")
+
+[node name="Output_port" type="StaticBody3D" parent="Graph3DNode/Ports/0" node_paths=PackedStringArray("connections")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0.415652, 0, 0)
+collision_layer = 0
+script = ExtResource("6_o0jww")
+side = 1
+type = ExtResource("4_fsmgv")
+connections = []
+
+[node name="Mesh" type="MeshInstance3D" parent="Graph3DNode/Ports/0/Output_port"]
+mesh = SubResource("BoxMesh_afx1i")
+
+[node name="Collider" type="CollisionShape3D" parent="Graph3DNode/Ports/0/Output_port"]
+shape = SubResource("BoxShape3D_3oubr")
+
+[node name="Graph3DNode2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.04635, 0, 0)
+script = ExtResource("2_p2oov")
+inputs = Array[ExtResource("3_oi7x3")]([ExtResource("7_56avl")])
+outputs = Array[ExtResource("3_oi7x3")]([ExtResource("7_56avl")])
+node_name = "Test Node pt. 2"
+category_color = Color(0.34, 0.34, 0.34, 1)
+background_color = Color(0.17, 0.17, 0.17, 1)
+text_material = ExtResource("5_kat0v")
+vpadding = 0.1
+hpadding = 0.05
+any_type = ExtResource("7_56avl")
+port_phys_mask = 0
+
+[node name="Text" type="MeshInstance3D" parent="Graph3DNode2"]
+mesh = SubResource("TextMesh_rywal")
+
+[node name="Type" type="MeshInstance3D" parent="Graph3DNode2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0055)
+mesh = SubResource("BoxMesh_o64y6")
+
+[node name="Board" type="MeshInstance3D" parent="Graph3DNode2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.223125, -0.0055)
+mesh = SubResource("BoxMesh_35q56")
+
+[node name="Ports" type="Node3D" parent="Graph3DNode2"]
+
+[node name="0" type="Node3D" parent="Graph3DNode2/Ports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.255, 0)
+
+[node name="Input" type="MeshInstance3D" parent="Graph3DNode2/Ports/0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.404641, 0, 0)
+mesh = SubResource("TextMesh_vqhu3")
+
+[node name="Output" type="MeshInstance3D" parent="Graph3DNode2/Ports/0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.404641, 0, 0)
+mesh = SubResource("TextMesh_wmtst")
+
+[node name="Input_port" type="StaticBody3D" parent="Graph3DNode2/Ports/0" node_paths=PackedStringArray("connections")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -0.796359, 0, 0)
+collision_layer = 0
+script = ExtResource("6_o0jww")
+side = 0
+type = ExtResource("7_56avl")
+connections = []
+
+[node name="Mesh" type="MeshInstance3D" parent="Graph3DNode2/Ports/0/Input_port"]
+mesh = SubResource("BoxMesh_qq1g6")
+
+[node name="Collider" type="CollisionShape3D" parent="Graph3DNode2/Ports/0/Input_port"]
+shape = SubResource("BoxShape3D_ony73")
+
+[node name="Output_port" type="StaticBody3D" parent="Graph3DNode2/Ports/0" node_paths=PackedStringArray("connections")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0.796359, 0, 0)
+collision_layer = 0
+script = ExtResource("6_o0jww")
+side = 1
+type = ExtResource("7_56avl")
+connections = []
+
+[node name="Mesh" type="MeshInstance3D" parent="Graph3DNode2/Ports/0/Output_port"]
+mesh = SubResource("BoxMesh_6kv3s")
+
+[node name="Collider" type="CollisionShape3D" parent="Graph3DNode2/Ports/0/Output_port"]
+shape = SubResource("BoxShape3D_xt8s4")

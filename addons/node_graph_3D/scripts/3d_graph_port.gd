@@ -8,60 +8,56 @@ enum Side {
 	Output
 }
 
+#region exports
 ## what side of the board is this port on (this determines how it limits connections
 @export var side: Graph3DPort.Side = Side.Input
 ## the variable type of this port (changing can result in port color changing
-@export var type: Graph3DVariable = preload("res://addons/node_graph_3D/defaults/Any.tres")
+@export var type: Graph3DVariable = preload("res://addons/node_graph_3D/defaults/Any.tres"):
+	set(to):
+		type = to
+		if !_mesh: return
+		_mesh.mesh.material.albedo_color = type.display_color
 ## a list of one (input) or more (output) connections
-var connections: Array[GraphConnection] = []
-
-## this signal is fired from [method connect_to] [i]after[/i] the saftey checks have occured but [i]before[/i] the [GraphConnection] is made
-## [br]this can be used to eg: make it so the Any ports on a graph get changed into a specific type
-signal connection_started(from: Graph3DPort, to: Graph3DPort)
+@export var connections: Array[GraphConnection] = []
+#endregion
 
 var _mesh: MeshInstance3D
 var _collider: CollisionShape3D
 
 func _ready() -> void:
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = type.display_color
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var meshi = BoxMesh.new()
-	meshi.material = mat
-	var mesh = MeshInstance3D.new()
-	mesh.mesh = meshi
-	add_child(mesh)
-	_mesh = mesh
+	_mesh = get_node_or_null("Mesh")
+	if !_mesh:
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = type.display_color
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		var meshi = BoxMesh.new()
+		meshi.material = mat
+		var mesh = MeshInstance3D.new()
+		mesh.mesh = meshi
+		mesh.name = "Mesh"
+		add_child(mesh)
+		_mesh = mesh
 	
-	var shape = BoxShape3D.new()
-	var collision = CollisionShape3D.new()
-	collision.shape = shape
-	add_child(collision)
-	_collider = collision	
+	_collider = get_node("Collider")
+	if !_collider:
+		var shape = BoxShape3D.new()
+		var collision = CollisionShape3D.new()
+		collision.shape = shape
+		collision.name = "Collider"
+		add_child(collision)
+		_collider = collision	
 	
 	scale = Vector3(0.1,0.1,0.1)
 	set_notify_transform(true)
+	add_to_group("bb_ignore")
 
-func connect_to(their: Graph3DPort) -> bool:
+func connect_to(their: Graph3DPort):
 	#make it so the paths are ALWAYS created from output -> input
 	if side == Side.Input: return their.connect_to(self)
 	
-	#get our parents (so we can check any types)
-	var my_parent = _get_g3dnode_parent()
-	var their_parent = their._get_g3dnode_parent()
+	if !_allow_connection(their):
+		assert(false, "Connection disallowed between %s and %s" % [get_path(), their.get_path()])
 	
-	# check if our types are valid to be connected to eachother
-	var type_valid = (my_parent.any_type == type) or (their_parent.any_type == their.type)
-	if !type_valid: type_valid = type == their.type
-	if !type_valid:
-		if side == Side.Input:
-			assert(type_valid, "cannot connect types %s to %s" % [type,their.type])
-		else: assert (type_valid, "cannot connect types %s to %s" % [their.type, type])
-	
-	#check if we are diffrent types since it makes no sense to connect a input to a input
-	assert(side != their.side, "tried to connect two ports of the same side to eachother")
-
-	connection_started.emit(self,their)
 	#region curve creation
 	var line := CurveMesh3D.new()
 	line.top_level = true
@@ -86,15 +82,53 @@ func connect_to(their: Graph3DPort) -> bool:
 	add_child(line)
 	#endregion
 	
-	#make the connection
+	#region connection object construction
 	var con = GraphConnection.make(self,their, line)
+	add_child(con)
+	con.owner = owner
 	connections.append(con)
 	their.connections.append(con)
 	_notification(NOTIFICATION_TRANSFORM_CHANGED)
 	their._notification(NOTIFICATION_TRANSFORM_CHANGED)
-	return false
+	#endregion
+	return
 
-func _get_g3dnode_parent() -> Graph3DNode:
+func disconnect_from(them: Graph3DPort): 
+	if side == Side.Input:
+		push_warning("wrong side! you are supposed to call it on the output side.")
+		return them.disconnect_from(self)
+	for con in connections:
+		print("trying_connection: %s" % con)
+		if con.from == self and con.to == them:
+			print("con.from and con.to match: removing")
+			connections.erase(con)
+			them.connections.erase(con)
+			con.line.queue_free()
+			con.queue_free()
+
+func _allow_connection(to: Graph3DPort) -> bool:
+	print("checking connection allowance")
+	return false
+	var my_parent_type = _get_parent_g3dnode_any()
+	var their_parent_type = to._get_parent_g3dnode_any()
+	
+	var type_valid = (my_parent_type == type) or \
+		(their_parent_type == to.type) or \
+		(type == to.type)
+	
+	if !type_valid:
+		push_warning("cannot connect types %s to %s" % [type,to.type])
+		return false
+	#check if we are diffrent types since it makes no sense to connect a input to a input
+	if side == to.side: 
+		push_warning("tried to connect two ports of the same side to eachother")
+		return false
+	if to.connections.size() > 0:
+		push_warning("tried to connect to the same port mutiple times")
+		return false
+	return true
+	
+func _get_parent_g3dnode_any() -> Graph3DVariable:
 	var work = self
 	var root = get_tree().get_root()
 	while true:
@@ -102,27 +136,17 @@ func _get_g3dnode_parent() -> Graph3DNode:
 			push_error("Something called _get_g3dnode_parent on a Graph3DPort that is not a descendant of a Graph3DNode")
 			print_stack()
 			return null
-		if (work is Graph3DNode): return work
+		if (work is Graph3DNode): return work.any_type
 		work = work.get_parent()
 	return null
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSFORM_CHANGED:
 		for con in connections:
+			if !con.is_valid(): continue
 			if side == Side.Input:
 				con.line.curve.set_point_position(1, global_position - con.from.global_position)
 				con.line.curve.set_point_in(1, -global_basis.x.normalized())
-			else: #Side.Output
+			elif side == Side.Output:
 				con.line.global_position = global_position
 				con.line.curve.set_point_out(0, global_basis.x.normalized())
-
-class GraphConnection extends RefCounted:
-	var from: Graph3DPort
-	var to: Graph3DPort
-	var line: CurveMesh3D
-	static func make(from: Graph3DPort, to: Graph3DPort, line: CurveMesh3D) -> GraphConnection:
-		var instance = new()
-		instance.from = from
-		instance.to = to
-		instance.line = line
-		return instance
