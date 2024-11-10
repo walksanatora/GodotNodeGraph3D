@@ -193,7 +193,7 @@ func _recalc_appearance():
 			port.type = inputs[line.name.to_int()]
 			port.position.x = -max(
 				input.mesh.get_aabb().size.x + (port._mesh.get_aabb().size.x * port.scale.x),
-				size.x/2
+				size.x/2 + (calc_aabb(port,false).size.x/2)
 			)
 			
 		var output: MeshInstance3D = line.get_node_or_null("Output") as MeshInstance3D
@@ -212,7 +212,7 @@ func _recalc_appearance():
 			port.type = outputs[line.name.to_int()]
 			port.position.x = max(
 				output.mesh.get_aabb().size.x + (port._mesh.get_aabb().size.x * port.scale.x),
-				size.x/2 + (calc_aabb(port,false).size.x)
+				size.x/2 + (calc_aabb(port,false).size.x/2)
 			)
 	appearance_recalculated.emit(self)
 
