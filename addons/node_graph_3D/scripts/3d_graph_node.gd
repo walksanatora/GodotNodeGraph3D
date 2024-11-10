@@ -1,10 +1,13 @@
-## What happens to text here
 @tool
-@icon("res://addons/node_graph_3d/icons/Graph3D.svg")
+@icon("res://addons/node_graph_3D/icons/Graph3D.svg")
 extends Node3D
 class_name Graph3DNode
+## A Graph Node in 3D Space
 
-## A node that is a fully functional node in a 3d graph
+##fired at the end of [method _recalc_appearance]
+signal appearance_recalculated(this: Graph3DNode)
+
+#region exports
 @export_group("Configuration")
 ## A list of input variable types for this node
 @export var inputs: Array[Graph3DVariable] = [
@@ -64,18 +67,14 @@ class_name Graph3DNode
 @export var any_type: Graph3DVariable = preload("res://addons/node_graph_3D/defaults/Any.tres")
 ## The Collision mask for ports
 @export_flags_3d_physics var port_phys_mask = 0
-
-##fired at the end of [method _recalc_appearance]
-signal appearance_recalculated(this: Graph3DNode)
-##fired on the creation of a port (which are destroyed and remade in [method _recalc_appearance])
-signal port_created(port: Graph3DPort)
+#endregion
 
 var _text: MeshInstance3D
 var _type: MeshInstance3D
 var _board: MeshInstance3D
 var _ports: Node
 
-var _init = false
+var _init = false # dummy var so that the initial setting of values wont throw errors
 
 func _ready() -> void:
 	#region text setup/validation
@@ -191,10 +190,9 @@ func _recalc_appearance():
 				port.collision_layer = port_phys_mask
 				line.add_child(port)
 				port.owner = owner
-				port_created.emit(port)
 			port.type = inputs[line.name.to_int()]
 			port.position.x = -max(
-				input.mesh.get_aabb().size.x,
+				input.mesh.get_aabb().size.x + (port._mesh.get_aabb().size.x * port.scale.x),
 				size.x/2
 			)
 			
@@ -210,12 +208,11 @@ func _recalc_appearance():
 				port.collision_layer = port_phys_mask
 				line.add_child(port)
 				port.owner = owner
-				port_created.emit(port)
 			
 			port.type = outputs[line.name.to_int()]
 			port.position.x = max(
-				output.mesh.get_aabb().size.x,
-				size.x/2
+				output.mesh.get_aabb().size.x + (port._mesh.get_aabb().size.x * port.scale.x),
+				size.x/2 + (calc_aabb(port,false).size.x)
 			)
 	appearance_recalculated.emit(self)
 

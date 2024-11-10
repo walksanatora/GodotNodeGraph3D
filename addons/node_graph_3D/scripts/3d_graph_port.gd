@@ -38,7 +38,7 @@ func _ready() -> void:
 		add_child(mesh)
 		_mesh = mesh
 	
-	_collider = get_node("Collider")
+	_collider = get_node_or_null("Collider")
 	if !_collider:
 		var shape = BoxShape3D.new()
 		var collision = CollisionShape3D.new()
@@ -106,9 +106,10 @@ func disconnect_from(them: Graph3DPort):
 			con.line.queue_free()
 			con.queue_free()
 
+## Override this function to change if a connection is allowed. [br]
+## self is always the `Input` side, to should be the Output side (but just incase check it) [br]
+## probally
 func _allow_connection(to: Graph3DPort) -> bool:
-	print("checking connection allowance")
-	return false
 	var my_parent_type = _get_parent_g3dnode_any()
 	var their_parent_type = to._get_parent_g3dnode_any()
 	
